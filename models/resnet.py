@@ -19,7 +19,7 @@ class BaseResNet18(nn.Module):
 # OR as a function that shall be hooked via 'register_forward_hook'
 def activation_shaping_hook(module, input, output):
         # set the mask & get A_bin;M_bin
-        mask = torch.where(torch.rand_like(output) < 0.2, 0.0, 1.0) #random mask
+        mask = torch.where(torch.rand_like(output) < 0.2, 0.0, 1.0) #random mask #0.1/0.2/0.3/0.4
         A_bin = torch.where(output <= 0, torch.tensor(0.0), torch.tensor(1.0))
         M_bin = torch.where(mask <= 0, torch.tensor(0.0), torch.tensor(1.0))
         # return the element-wise product of activation map and mask
@@ -33,10 +33,10 @@ class ASHResNet18(nn.Module):
         self.resnet.fc = nn.Linear(self.resnet.fc.in_features, 7)
         stored_outputs_hook = []
         alternate = 0
-        for module in self.resnet.modules():
+        for module in self.resnet.modules():   ##  if ((isinstance(module, nn.ReLU) or isinstance(module, nn.Conv2d) or isinstance(module, nn.BatchNorm2d))
             if isinstance(module, nn.Conv2d):
                 alternate += 1
-                if alternate % 3 == 0:
+                if alternate % 3 == 0: ## 1/2/3/4/5
                     stored_outputs_hook.append(module.register_forward_hook(activation_shaping_hook))
 
     def forward(self, x):
