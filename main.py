@@ -76,23 +76,9 @@ def train(model, data):
                 # elif... TODO: Add here train logic for the other experiments
                 # other kind of loss func?(maybe)
                 elif CONFIG.experiment in ['Domain_Adaptation']:
-                    x_source, y_source, x_target = batch
-                    x_source, y_source, x_target = x_source.to(CONFIG.device), y_source.to(
-                        CONFIG.device), x_target.to(CONFIG.device)
-
-                    # Compute the loss for DA experiment
-                    source_logits = model(x_source)
-                    target_logits = model(x_target)
-                    source_mean = torch.mean(source_logits, dim=0)
-                    target_mean = torch.mean(target_logits, dim=0)
-                    # Define your domain adaptation loss here (e.g., domain adversarial loss) #todo!!!!
-                    domain_loss =torch.mean((source_mean - target_mean) ** 2)   # compute_domain_adversarial_loss(source_logits, target_logits)
-
-                    # Define your classification loss for the source domain here
-                    classification_loss = F.cross_entropy(source_logits, y_source)
-
-                    # Total loss is a combination of domain adaptation loss and classification loss
-                    loss = classification_loss + domain_loss
+                     x, y,_ = batch
+                    x, y = x.to(CONFIG.device), y.to(CONFIG.device)
+                    loss = F.cross_entropy(model(x), y)
                 ######################################################
 
             # Optimization step
