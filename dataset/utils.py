@@ -28,26 +28,30 @@ class BaseDataset(Dataset):
 # TODO: modify 'BaseDataset' for the Domain Adaptation setting.
 # Hint: randomly sample 'target_examples' to obtain targ_x
 class DomainAdaptationDataset(Dataset):
-    def __init__(self, source_examples, target_examples, transform):
+    def __init__(self, target_examples, source_examples=None, transform=None):
         self.source_examples = source_examples
         self.target_examples = target_examples
-        self.T = transform
-
+        self.transform = transform
+        self.is_source_available = source_examples is not None
     def __len__(self):
-        return len(self.source_examples)
+        return len(self.source_examples) if self.is_source_available else len(self.target_examples)
 
     def __getitem__(self, index):
-        src_x, src_y = self.source_examples[index]
-        targ_x, _ = random.choice(self.target_examples)
-
-        src_x = Image.open(src_x).convert('RGB')
-        targ_x = Image.open(targ_x).convert('RGB')
-        src_y = torch.tensor(src_y).long()
-        src_x = self.T(src_x).to(CONFIG.dtype)
-        targ_x = self.T(targ_x).to(CONFIG.dtype)
-
-        return src_x, src_y, targ_x
-
+        if self.is_source_available:
+            src_x, src_y = self.source_examples[index]
+            src_x = Image.open(src_x).convert('RGB')
+            src_y = torch.tensor(src_y).long()
+            src_x = self.transform(src_x).to(CONFIG.dtype)
+            targ_x, _ = random.choice(self.target_examples)
+            targ_x = Image.open(targ_x).convert('RGB')
+            targ_x = self.transform(targ_x).to(CONFIG.dtype)
+            return src_x, src_y, targ_x
+        else:
+            targ_x, targ_y = self.target_examples[index]
+            targ_x = Image.open(targ_x).convert('RGB')
+            targ_y = torch.tensor(targ_y).long()
+            targ_x = self.transform(targ_x).to(CONFIG.dtype)
+            return targ_x, targ_y
 # [OPTIONAL] TODO: modify 'BaseDataset' for the Domain Generalization setting. 
 # Hint: combine the examples from the 3 source domains into a single 'examples' list
 #class DomainGeneralizationDataset(Dataset):
