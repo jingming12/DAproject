@@ -24,7 +24,7 @@ def evaluate(model, data):
     acc_meter = acc_meter.to(CONFIG.device)
 
     loss = [0.0, 0]
-    for x, y, _ in tqdm(data):
+    for x, y in tqdm(data):
         with torch.autocast(device_type=CONFIG.device, dtype=torch.float16, enabled=True):
             x, y = x.to(CONFIG.device), y.to(CONFIG.device)
             logits = model(x)
