@@ -79,10 +79,8 @@ def train(model, data):
                     source_x, source_y, target_x = batch
                     source_x, source_y, target_x = source_x.to(CONFIG.device), source_y.to(CONFIG.device), target_x.to(
                         CONFIG.device)
-                    layer_name = 'layer1'  # 可以根据需要进行调整
-                    # 记录目标域的激活图
+                    layer_name = 'layer1'  # 2/3/4/5...
                     target_activation_maps = model.get_activation_maps(target_x, layer_name)
-                    # 应用激活图于源域数据
                     outputs = model(source_x, target_activation_maps)
                     loss = F.cross_entropy(outputs, source_y)
                 ######################################################
