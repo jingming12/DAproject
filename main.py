@@ -76,11 +76,10 @@ def train(model, data):
                 # elif... TODO: Add here train logic for the other experiments
                 # another kind of loss function?(maybe)
                 elif CONFIG.experiment in ['Domain_Adaptation']:
-                    source_x, source_y,target_x= batch
-                    source_x = source_x.to(CONFIG.device)
-                    source_y = source_y.to(CONFIG.device)
-                    target_x = target_x.to(CONFIG.device)
-                    layer_name = 'layer1'  ## can be changed
+                    source_x, source_y, target_x = batch
+                    source_x, source_y, target_x = source_x.to(CONFIG.device), source_y.to(CONFIG.device), target_x.to(
+                        CONFIG.device)
+                    layer_name = 'layer1'  # 可以根据需要进行调整
                     # 记录目标域的激活图
                     target_activation_maps = model.get_activation_maps(target_x, layer_name)
                     # 应用激活图于源域数据
