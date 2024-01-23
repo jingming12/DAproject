@@ -31,13 +31,9 @@ class ASHResNet18(nn.Module):
         super(ASHResNet18, self).__init__()
         self.resnet = resnet18(weights=ResNet18_Weights)
         self.resnet.fc = nn.Linear(self.resnet.fc.in_features, 7)
-
-        # 存储钩子函数的引用和激活图
         self.stored_outputs_hook = []
         self.activation_maps = {}
         alternate = 0
-
-        # 注册钩子以存储激活图
         for name, module in self.resnet.named_modules():
             if isinstance(module, nn.Conv2d): ## can be changed
                 alternate += 1
@@ -46,21 +42,17 @@ class ASHResNet18(nn.Module):
                     self.stored_outputs_hook.append(hook)
     def create_hook(self, name):
         def hook(module, input, output):
-            # 使用 activation_shaping_hook 函数处理激活图
             shaped_output = activation_shaping_hook(module, input, output)
             self.activation_maps[name] = shaped_output
         return hook
     def forward(self, x, target_activation_map_name=None):
         x = self.resnet(x)
-        # 应用指定层的形状操作后的激活图
         if target_activation_map_name and target_activation_map_name in self.activation_maps:
             shaped_activation_map = self.activation_maps[target_activation_map_name]
             x = x * shaped_activation_map
         return x
     def get_activation_maps(self, target_x, layer_name):
-        # 前向传播以计算激活图，激活图将被存储在 self.activation_maps 中
         with torch.no_grad():
             self(target_x)
-        # 返回指定层的激活图
         return self.activation_maps.get(layer_name)
 ######################################################
