@@ -33,12 +33,29 @@ class ASHResNet18(nn.Module):
         self.resnet.fc = nn.Linear(self.resnet.fc.in_features, 7)
         stored_outputs_hook = []
         alternate = 0
-        for module in self.resnet.modules():   ##  if ((isinstance(module, nn.ReLU) or isinstance(module, nn.Conv2d) or isinstance(module, nn.BatchNorm2d))
-            if isinstance(module, nn.Conv2d):
+        for module in self.resnet.modules():
+            if isinstance(module, nn.Conv2d):  ##  if ((isinstance(module, nn.ReLU) or isinstance(module, nn.Conv2d) or isinstance(module, nn.BatchNorm2d))
                 alternate += 1
-                if alternate % 3 == 0: ## 1/2/3/4/5
+                if alternate % 3 == 0:
                     stored_outputs_hook.append(module.register_forward_hook(activation_shaping_hook))
 
-    def forward(self, x):
-        return self.resnet(x)
+    def forward(self, x,target_activation_maps=None):
+        x = self.resnet(x)
+        # 如果提供了激活图，执行相应的处理
+        if target_activation_maps is not None:
+            # ...在这里处理激活图和 x 的结合...
+            pass
+        return x
+    def get_activation_maps(self, target_x, layer_name):
+        activation_maps = []
+        def hook_fn(module, input, output):
+            activation_maps.append(output.detach())
+        # 注册钩子到指定的层
+        hook = getattr(self.resnet, layer_name).register_forward_hook(hook_fn)
+        # 前向传播，计算激活图
+        with torch.no_grad():
+            self(target_x)
+        # 移除钩子
+        hook.remove()
+        return activation_maps
 ######################################################
