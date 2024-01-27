@@ -75,14 +75,11 @@ def train(model, data):
                 ######################################################
                 # elif... TODO: Add here train logic for the other experiments
                 # another kind of loss function?(maybe)
-                elif CONFIG.experiment in ['Domain_Adaptation']:
+               elif CONFIG.experiment in ['Domain_Adaptation']:
                     source_x, source_y, target_x = batch
                     source_x, source_y, target_x = source_x.to(CONFIG.device), source_y.to(CONFIG.device), target_x.to(
                         CONFIG.device)
-                    layer_name = 'layer1'  # 2/3/4/5...
-                    target_activation_maps = model.get_activation_maps(target_x, layer_name)
-                    outputs = model(source_x, target_activation_maps)
-                    loss = F.cross_entropy(outputs, source_y)
+                    loss = F.cross_entropy(model(target_x), source_y)
                 ######################################################
 
             # Optimization step
