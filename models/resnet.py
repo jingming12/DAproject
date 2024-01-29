@@ -62,42 +62,40 @@ class ASHResNet18(nn.Module):
         return shaped_output
 
     def forward(self, x):
-        # 初始层
         x = self.resnet.conv1(x)
         x = self.apply_activation_map(x, 'conv1')
         x = self.resnet.bn1(x)
         x = self.resnet.relu(x)
         x = self.resnet.maxpool(x)
 
-        # 应用 ResNet block 1
+        #  ResNet block 1
         for idx, sublayer in enumerate(self.resnet.layer1):
             x = sublayer(x)
-            if idx == len(self.resnet.layer1) - 1:  # 最后一个子层
+            if idx == len(self.resnet.layer1) - 1:  
                 x = self.apply_activation_map(x, 'layer1.1.conv1')
 
-        # 应用 ResNet block 2
+        # ResNet block 2
         for idx, sublayer in enumerate(self.resnet.layer2):
             x = sublayer(x)
-            if idx == 0:  # 第一个子层
+            if idx == 0: 
                 x = self.apply_activation_map(x, 'layer2.0.conv2')
-            elif idx == len(self.resnet.layer2) - 1:  # 最后一个子层
+            elif idx == len(self.resnet.layer2) - 1: 
                 x = self.apply_activation_map(x, 'layer2.1.conv2')
 
-        # 应用 ResNet block 3
+        # ResNet block 3
         for idx, sublayer in enumerate(self.resnet.layer3):
             x = sublayer(x)
-            if idx == 0:  # 第一个子层
+            if idx == 0:
                 x = self.apply_activation_map(x, 'layer3.0.downsample.0')
 
-        # 应用 ResNet block 4
+        # ResNet block 4
         for idx, sublayer in enumerate(self.resnet.layer4):
             x = sublayer(x)
-            if idx == 0:  # 第一个子层
+            if idx == 0: 
                 x = self.apply_activation_map(x, 'layer4.0.conv1')
-            elif idx == len(self.resnet.layer4) - 1:  # 最后一个子层
+            elif idx == len(self.resnet.layer4) - 1:
                 x = self.apply_activation_map(x, 'layer4.1.conv1')
 
-        # 结尾层
         x = self.resnet.avgpool(x)
         x = torch.flatten(x, 1)
         x = self.resnet.fc(x)
