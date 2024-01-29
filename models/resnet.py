@@ -29,7 +29,7 @@ def activation_shaping_hook(module, input, output):
 class ASHResNet18(nn.Module):
     def __init__(self, activation_interval=3, layer_types=nn.Conv2d):  # can be changed here
         super(ASHResNet18, self).__init__()
-        self.resnet = resnet18(weights=ResNet18_Weights.DEFAULT)
+        self.resnet = resnet18(weights=ResNet18_Weights.DEFAULT)  #ori
         self.resnet.fc = nn.Linear(self.resnet.fc.in_features, 7)
 
         self.stored_outputs_hook = []
