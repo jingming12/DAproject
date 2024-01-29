@@ -27,9 +27,9 @@ def activation_shaping_hook(module, input, output):
 ######################################################
 # TODO: modify 'BaseResNet18' including the Activation Shaping Module
 class ASHResNet18(nn.Module):
-    def __init__(self, activation_interval=3, layer_types=nn.Conv2d):  # can be changed here
+    def __init__(self, activation_interval=3, layer_types=nn.Conv2d):  # 可以更改这里
         super(ASHResNet18, self).__init__()
-        self.resnet = resnet18(weights=ResNet18_Weights.DEFAULT)  #ori
+        self.resnet = resnet18(weights=ResNet18_Weights.DEFAULT)
         self.resnet.fc = nn.Linear(self.resnet.fc.in_features, 7)
 
         self.stored_outputs_hook = []
@@ -53,63 +53,42 @@ class ASHResNet18(nn.Module):
     def store_activation_map(self, name, module, input, output):
         shaped_output = self.activation_shaping_hook(module, input, output)
         self.activation_maps[name] = shaped_output
+        print(f"Storing activation map for layer: {name}")
 
     def activation_shaping_hook(self, module, input, output):
-        mask = torch.where(torch.rand_like(output) < 0.1, 0.0, 1.0)  # 随机掩码
+        mask = torch.where(torch.rand_like(output) < 0.05, 0.0, 1.0)  # 随机掩码
         A_bin = torch.where(output <= 0, torch.tensor(0.0), torch.tensor(1.0))
         M_bin = torch.where(mask <= 0, torch.tensor(0.0), torch.tensor(1.0))
         shaped_output = A_bin * M_bin
+        print(f"Generating activation map for layer: {module}, output shape: {output.shape}")
         return shaped_output
 
-    def forward(self, x):
+    def forward(self, x, activation_maps=None):
+        # 初始层
         x = self.resnet.conv1(x)
-        x = self.apply_activation_map(x, 'conv1')
+        if activation_maps and 'conv1' in activation_maps:
+            x = x * activation_maps['conv1']
         x = self.resnet.bn1(x)
         x = self.resnet.relu(x)
         x = self.resnet.maxpool(x)
 
-        #  ResNet block 1
-        for idx, sublayer in enumerate(self.resnet.layer1):
-            x = sublayer(x)
-            if idx == len(self.resnet.layer1) - 1:  
-                x = self.apply_activation_map(x, 'layer1.1.conv1')
+        # 遍历每个 ResNet block
+        for layer_name, layer in [('layer1', self.resnet.layer1),
+                                  ('layer2', self.resnet.layer2),
+                                  ('layer3', self.resnet.layer3),
+                                  ('layer4', self.resnet.layer4)]:
+            for sublayer_name, module in layer.named_children():
+                full_name = f"{layer_name}.{sublayer_name}"
+                x = module(x)
+                if activation_maps and full_name in activation_maps:
+                    x = x * activation_maps[full_name]
 
-        # ResNet block 2
-        for idx, sublayer in enumerate(self.resnet.layer2):
-            x = sublayer(x)
-            if idx == 0: 
-                x = self.apply_activation_map(x, 'layer2.0.conv2')
-            elif idx == len(self.resnet.layer2) - 1: 
-                x = self.apply_activation_map(x, 'layer2.1.conv2')
-
-        # ResNet block 3
-        for idx, sublayer in enumerate(self.resnet.layer3):
-            x = sublayer(x)
-            if idx == 0:
-                x = self.apply_activation_map(x, 'layer3.0.downsample.0')
-
-        # ResNet block 4
-        for idx, sublayer in enumerate(self.resnet.layer4):
-            x = sublayer(x)
-            if idx == 0: 
-                x = self.apply_activation_map(x, 'layer4.0.conv1')
-            elif idx == len(self.resnet.layer4) - 1:
-                x = self.apply_activation_map(x, 'layer4.1.conv1')
-
+        # 结尾层
         x = self.resnet.avgpool(x)
         x = torch.flatten(x, 1)
         x = self.resnet.fc(x)
         return x
 
-    def apply_activation_map(self, x, layer_name):
-        if layer_name in self.activation_maps:
-            print(f"Applying activation map on {layer_name}")
-            activation_map = self.activation_maps[layer_name]
-            print(f"Activation map shape: {activation_map.shape}, Input shape: {x.shape}")
-            return x * activation_map
-        else:
-            print(f"No activation map available for {layer_name}")
-        return x
     def get_activation_maps(self, target_x):
         self.activation_maps.clear()
         with torch.no_grad():
