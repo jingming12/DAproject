@@ -31,12 +31,9 @@ class ASHResNet18(nn.Module):
         super(ASHResNet18, self).__init__()
         self.resnet = resnet18(weights=ResNet18_Weights.DEFAULT)
         self.resnet.fc = nn.Linear(self.resnet.fc.in_features, 7)
-
         self.stored_outputs_hook = []
         self.activation_maps = {}
-
         self.create_and_register_hooks(activation_interval, layer_types)
-
     def create_and_register_hooks(self, activation_interval, layer_types):
         counter = 0
         for name, module in self.resnet.named_modules():
@@ -44,12 +41,10 @@ class ASHResNet18(nn.Module):
                 if counter % activation_interval == 0:
                     self.create_hook(name, module)
                 counter += 1
-
     def create_hook(self, name, module):
         print("Registering hook on:", name)
         hook = module.register_forward_hook(lambda mod, inp, out: self.store_activation_map(name, mod, inp, out))
         self.stored_outputs_hook.append(hook)
-
     def store_activation_map(self, name, module, input, output):
         shaped_output = self.activation_shaping_hook(module, input, output)
         self.activation_maps[name] = shaped_output
@@ -64,15 +59,12 @@ class ASHResNet18(nn.Module):
         return shaped_output
 
     def forward(self, x, activation_maps=None):
-        # 初始层
         x = self.resnet.conv1(x)
         if activation_maps and 'conv1' in activation_maps:
             x = x * activation_maps['conv1']
         x = self.resnet.bn1(x)
         x = self.resnet.relu(x)
         x = self.resnet.maxpool(x)
-
-        # 遍历每个 ResNet block
         for layer_name, layer in [('layer1', self.resnet.layer1),
                                   ('layer2', self.resnet.layer2),
                                   ('layer3', self.resnet.layer3),
@@ -82,8 +74,6 @@ class ASHResNet18(nn.Module):
                 x = module(x)
                 if activation_maps and full_name in activation_maps:
                     x = x * activation_maps[full_name]
-
-        # 结尾层
         x = self.resnet.avgpool(x)
         x = torch.flatten(x, 1)
         x = self.resnet.fc(x)
@@ -94,6 +84,4 @@ class ASHResNet18(nn.Module):
         with torch.no_grad():
             self(target_x)
         return self.activation_maps
-
-
 ######################################################
