@@ -48,14 +48,14 @@ class ASHResNet18(nn.Module):
     def store_activation_map(self, name, module, input, output):
         shaped_output = self.activation_shaping_hook(module, input, output)
         self.activation_maps[name] = shaped_output
-        print(f"Storing activation map for layer: {name}")
+       # print(f"Storing activation map for layer: {name}")
 
     def activation_shaping_hook(self, module, input, output):
         mask = torch.where(torch.rand_like(output) < 0.05, 0.0, 1.0)  # 随机掩码
         A_bin = torch.where(output <= 0, torch.tensor(0.0), torch.tensor(1.0))
         M_bin = torch.where(mask <= 0, torch.tensor(0.0), torch.tensor(1.0))
         shaped_output = A_bin * M_bin
-        print(f"Generating activation map for layer: {module}, output shape: {output.shape}")
+       # print(f"Generating activation map for layer: {module}, output shape: {output.shape}")
         return shaped_output
 
     def forward(self, x, activation_maps=None):
