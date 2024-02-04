@@ -42,7 +42,7 @@ class ASHResNet18(nn.Module):
                     self.create_hook(name, module)
                 counter += 1
     def create_hook(self, name, module):
-        print("Registering hook on:", name)
+        #print("Registering hook on:", name)
         hook = module.register_forward_hook(lambda mod, inp, out: self.store_activation_map(name, mod, inp, out))
         self.stored_outputs_hook.append(hook)
     def store_activation_map(self, name, module, input, output):
