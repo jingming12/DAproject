@@ -17,13 +17,13 @@ class BaseResNet18(nn.Module):
 #...
 #
 # OR as a function that shall be hooked via 'register_forward_hook'
-def activation_shaping_hook(module, input, output):
+#def activation_shaping_hook(module, input, output):
         # set the mask & get A_bin;M_bin
-        mask = torch.where(torch.rand_like(output) < 0, 0.0, 1.0) #random mask
-        A_bin = torch.where(output <= 0, torch.tensor(0.0), torch.tensor(1.0))
-        M_bin = torch.where(mask <= 0, torch.tensor(0.0), torch.tensor(1.0))
+        #mask = torch.where(torch.rand_like(output) < 0, 0.0, 1.0) #random mask
+        #A_bin = torch.where(output <= 0, torch.tensor(0.0), torch.tensor(1.0))
+        #M_bin = torch.where(mask <= 0, torch.tensor(0.0), torch.tensor(1.0))
         # return the element-wise product of activation map and mask
-        return A_bin * M_bin
+        #return A_bin * M_bin
 ######################################################
 # TODO: modify 'BaseResNet18' including the Activation Shaping Module
 class ASHResNet18(nn.Module):
