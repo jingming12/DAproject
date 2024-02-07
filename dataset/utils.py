@@ -41,7 +41,8 @@ class DomainAdaptationDataset(Dataset):
             src_x = Image.open(src_x).convert('RGB')
             src_y = torch.tensor(src_y).long()
             src_x = self.transform(src_x).to(CONFIG.dtype)
-            targ_x, _ = random.choice(self.target_examples)
+            target_index = torch.randint(len(self.target_examples), size=(1,)).item()
+            targ_x, _ = self.target_examples[target_index]
             targ_x = Image.open(targ_x).convert('RGB')
             targ_x = self.transform(targ_x).to(CONFIG.dtype)
             return src_x, src_y, targ_x
