@@ -74,7 +74,7 @@ def load_data():
             target_DAexamples.append((os.path.join(CONFIG.dataset_args['root'], *path), label))
 
         train_dataset = DomainAdaptationDataset(source_DAexamples, target_DAexamples, transform=train_transform)
-         test_dataset = DomainAdaptationDataset(target_DAexamples, transform=test_transform)
+         test_dataset = BaseDataset(target_DAexamples, transform=test_transform)
     ######################################################
 
     # Dataloaders
