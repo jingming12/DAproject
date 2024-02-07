@@ -27,7 +27,7 @@ def activation_shaping_hook(module, input, output):
 ######################################################
 # TODO: modify 'BaseResNet18' including the Activation Shaping Module
 class ASHResNet18(nn.Module):
-    def __init__(self, activation_interval=3, layer_types=nn.Conv2d):  # 可以更改这里
+    def __init__(self, activation_interval=3, layer_types=nn.Conv2d):  # modify here~
         super(ASHResNet18, self).__init__()
         self.resnet = resnet18(weights=ResNet18_Weights.DEFAULT)
         self.resnet.fc = nn.Linear(self.resnet.fc.in_features, 7)
@@ -51,7 +51,7 @@ class ASHResNet18(nn.Module):
        # print(f"Storing activation map for layer: {name}")
 
     def activation_shaping_hook(self, module, input, output):
-        mask = torch.where(torch.rand_like(output) < 0.05, 0.0, 1.0)  # 随机掩码
+        mask = torch.where(torch.rand_like(output) < 0.05, 0.0, 1.0)  # 0.05,0.2,0.6
         A_bin = torch.where(output <= 0, torch.tensor(0.0), torch.tensor(1.0))
         M_bin = torch.where(mask <= 0, torch.tensor(0.0), torch.tensor(1.0))
         shaped_output = A_bin * M_bin
